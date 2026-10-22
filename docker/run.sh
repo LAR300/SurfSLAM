@@ -33,13 +33,22 @@ DOCKER_OPTIONS+="--runtime=nvidia "
 DOCKER_OPTIONS+="-e SDL_VIDEODRIVER=x11 "
 DOCKER_OPTIONS+="-u $(id -u):$(id -g) "
 DOCKER_OPTIONS+="-w /home/$(whoami)/SurfSLAM "
-DOCKER_OPTIONS+="--shm-size 32G "
+# /dev/shm is tmpfs backed by RAM, so a size above the host's memory caps
+# nothing before the OOM killer. Default to half of RAM, never above 32G.
+SHM_MB=$(( $(awk '/MemTotal/{print $2}' /proc/meminfo) / 2048 ))
+[ "$SHM_MB" -gt 32768 ] && SHM_MB=32768
+DOCKER_OPTIONS+="--shm-size ${SURFSLAM_SHM_SIZE:-${SHM_MB}m} "
 
+# An unmatched glob stays literal in bash, so on a host with no /dev/video*
+# or an empty /mnt these loops would pass `--device=/dev/video*` and
+# `-v /mnt/*:/mnt/*` to docker run, which fails. Skip what does not exist.
 for cam in /dev/video*; do
+  [ -e "$cam" ] || continue
   DOCKER_OPTIONS+="--device=${cam} "
 done
 
 for f in /mnt/*; do
+  [ -e "$f" ] || continue
   DOCKER_OPTIONS+="-v $f:/mnt/$(basename $f) "
 done
 
