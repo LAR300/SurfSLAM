@@ -1,0 +1,42 @@
+# SEGUNDA JANELA DA ARRAIA, para ver se o comportamento se repete.
+#
+# O bag `19-07-23` e a missao INTEIRA -- 1214 s, com o ROV a subir e descer
+# na pilastra seis vezes entre 1,5 e 6,5 m. Sem corte, o HDF5 daria ~480 GB:
+# as imagens vao cruas, 5,5 MB por par estereo. Convertem-se os primeiros
+# 205 s (`--ate 205`), que cobrem 0,8 a 6,5 m e sao o mesmo regime da janela
+# 20-07-08.
+#
+# A NOSSA janela da arraia (miniROV / PETRO) no formato de sequencia do
+# SurfSLAM. Gerado para o S5; o HDF5 vem do `s3_para_hdf5.py` e a calibracao
+# do `s3_calib_para_surfslam.py`, ambos em
+# prj-minirov-petro-contrib-pkgs/petro_reconstruction/scripts/.
+#
+# Sem `groundtruth_traj`: a arraia nao tem verdade. O campo e opcional
+# (config.get(..., None) no run_surfslam.py) e a comparacao e contra a NOSSA
+# trajetoria, que tambem nao e verdade -- e uma segunda opiniao.
+#
+# O `tracker.backend_config_path` NAO E DECORATIVO. O `cfg/defaults.yaml`
+# aponta-o para `./calibration/calib_vi_optimized_surfslam.yaml`, que e o
+# veiculo DELES, e `calibration:` so alimenta o frontend (rectificacao,
+# registo). Deixa-lo por defeito poe o grafo de poses a fundir a NOSSA IMU,
+# o NOSSO DVL e o NOSSO barometro com os extrinsecos, as intrinsecas e a
+# pressao atmosferica do BlueROV deles. Aconteceu nas corridas v1 a v3 do S5:
+# 90,31 m de percurso para 18,2--18,4 m de DVL, e as tres saidas byte a byte
+# iguais apesar de o ruido da IMU ter mudado 31x entre elas -- porque o
+# ficheiro que mudou nunca chegou a ser aberto pelo backend.
+#
+# O caminho e absoluto de proposito: o codigo faz
+# `Path(<repo>)/"cfg"/backend_config_path`, e em pathlib um operando absoluto
+# substitui o da esquerda.
+baseline: defaults.yaml
+dataset: /data/slam_results/nosso/arraia_19-07-23/measurements.hdf5
+calibration: /data/slam_results/nosso/arraia_19-07-23/calib.yaml
+experiment_name: arraia_19-07-23
+dataset_family: tbnms
+# A chave e `changes:`, e nao um `tracker:` a seco -- e assim que as ablacoes
+# deles (cfg/tbnms_ablations/*.yaml) sobrepoem o backend, e repare-se que
+# nelas `calibration` e `backend_config_path` apontam SEMPRE para o mesmo
+# ficheiro. E essa a invariante que as corridas v1--v3 quebraram.
+changes:
+  tracker:
+    backend_config_path: /data/slam_results/nosso/arraia_19-07-23/calib.yaml

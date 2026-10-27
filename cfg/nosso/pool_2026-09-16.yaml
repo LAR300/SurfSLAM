@@ -1,0 +1,37 @@
+# A PISCINA, e o motivo de ela existir aqui: e a cena de CONTROLO.
+#
+# A arraia poe o SurfSLAM a reconstruir a mesma pilastra duas vezes -- o ROV
+# desce a mapea-la, gira em torno dela e sobe pelo outro lado, e as duas
+# passagens aparecem separadas por ~3 m. Isso pode ser a cena (agua aberta,
+# pouca sobreposicao entre as duas passagens) ou pode ser a nossa conversao.
+# A piscina separa as duas hipoteses:
+#
+#   * e PLANA  -- 19 cm de excursao em z ao longo de 215 s, contra 7 m na
+#     arraia. Qualquer erro de referencial que misture z com o plano salta a
+#     vista.
+#   * tem REFERENCIA EXTERNA -- o arco do DVL da 23,0--23,6 m
+#     (r6_baseline.py, 90,2% de amostras validas), e a nossa trajetoria da
+#     23,71 m: +0,5%, contra +5% na arraia.
+#   * tem SUPERFICIE DE VERDADE -- data/benchmark/b5_pool_2026-09-16.
+#   * e QUASE FECHADA -- inicio a fim 1,33 m em 23,7 m de percurso.
+#
+# Tem menos textura que a arraia, e isso e a ressalva: um resultado mau aqui
+# pode ser falta de textura. Um resultado BOM aqui com a arraia ma, esse
+# aponta para a cena. E um resultado mau nas duas aponta para nos.
+#
+# Mesma calibracao que a arraia -- as duas corridas do nosso pipeline usam o
+# mesmo `zed_opencv_calibration_cesar_001.yaml`, logo o calib.yaml gerado
+# serve as duas.
+#
+# O `backend_config_path` e obrigatorio e tem de bater certo com
+# `calibration`: ver o cabecalho de arraia_20-07-08.yaml para o que acontece
+# quando nao bate (90,31 m de percurso para 18,3 m de DVL).
+baseline: defaults.yaml
+dataset: /data/slam_results/nosso/pool_2026-09-16/measurements.hdf5
+calibration: /data/slam_results/nosso/pool_2026-09-16/calib.yaml
+experiment_name: pool_2026-09-16
+dataset_family: tbnms
+
+changes:
+  tracker:
+    backend_config_path: /data/slam_results/nosso/pool_2026-09-16/calib.yaml
